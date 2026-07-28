@@ -1,0 +1,47 @@
+# Variables d'environnement et secrets
+.env
+*.env
+!.env.example
+
+# Environnement virtuel Python
+.venv/
+venv/
+env/
+
+# Fichiers temporaires Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Base vectorielle locale
+vector_db/*
+!vector_db/.gitkeep
+
+# Données n8n locales
+n8n_data/
+
+# Documents internes et confidentiels
+documents/procedures/*
+documents/peag/*
+documents/olt/*
+documents/peu/*
+documents/divers/*
+
+# Conservation des dossiers vides
+!documents/procedures/.gitkeep
+!documents/peag/.gitkeep
+!documents/olt/.gitkeep
+!documents/peu/.gitkeep
+!documents/divers/.gitkeep
+
+# Journaux
+*.log
+logs/
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini

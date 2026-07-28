@@ -1,0 +1,22 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: pfe-chatbot-n8n
+    restart: unless-stopped
+
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - GENERIC_TIMEZONE=Europe/Paris
+      - TZ=Europe/Paris
+
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/files/workflows
+
+volumes:
+  n8n_data:
