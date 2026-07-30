@@ -1,15 +1,20 @@
-```markdown
-# Base documentaire
+# Base documentaire du chatbot
 
-Ce dossier accueillera les documents exploités par le système RAG.
+Ce dossier contient localement les documents utilisés par le système RAG.
 
-Les documents professionnels ou confidentiels ne doivent pas être envoyés
-sur GitHub sans autorisation.
+L'arborescence d'origine du SharePoint est conservée afin de préserver
+la classification métier des documents.
 
-Sous-dossiers :
+## Domaines documentaires
 
-- `procedures` : procédures générales ;
-- `peag` : documentation PEAG ;
-- `olt` : documentation OLT ;
-- `peu` : documentation PEU ;
-- `divers` : autres documents techniques.
+- `Collecte-Fixe`
+- `DCN`
+- `DSL`
+- `FTTH`
+
+## Confidentialité
+
+Les documents contenus dans ces dossiers sont internes à l'entreprise.
+Ils ne doivent pas être publiés dans le dépôt GitHub.
+
+Seul ce fichier README est versionné.

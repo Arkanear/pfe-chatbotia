@@ -15,25 +15,16 @@ __pycache__/
 .mypy_cache/
 
 # Base vectorielle locale
-vector_db/*
+vector_db/**
 !vector_db/.gitkeep
+
+# Documents internes et confidentiels
+documents/**
+!documents/README.md
+!documents/**/.gitkeep
 
 # Données n8n locales
 n8n_data/
-
-# Documents internes et confidentiels
-documents/procedures/*
-documents/peag/*
-documents/olt/*
-documents/peu/*
-documents/divers/*
-
-# Conservation des dossiers vides
-!documents/procedures/.gitkeep
-!documents/peag/.gitkeep
-!documents/olt/.gitkeep
-!documents/peu/.gitkeep
-!documents/divers/.gitkeep
 
 # Journaux
 *.log
