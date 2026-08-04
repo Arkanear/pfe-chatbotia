@@ -1,6 +1,6 @@
 """Client HTTP permettant d'interroger Ollama."""
 
-# Fichier responsable des echanges avec ollama 
+from typing import Any
 
 import httpx
 
@@ -11,22 +11,35 @@ class OllamaError(RuntimeError):
     """Erreur rencontrée lors d'un appel à Ollama."""
 
 
-async def generate_response(prompt: str) -> str:
-    """Envoie une question au modèle Ollama et retourne sa réponse."""
+async def generate_response(
+    prompt: str,
+    system: str | None = None,
+    temperature: float = 0.1,
+) -> str:
+    """Envoie un prompt au modèle Ollama et retourne sa réponse."""
 
     settings = get_settings()
 
-    payload = {
+    payload: dict[str, Any] = {
         "model": settings.ollama_model,
         "prompt": prompt,
         "stream": False,
+        "options": {
+            "temperature": temperature,
+        },
     }
+
+    if system:
+        payload["system"] = system
 
     endpoint = f"{settings.ollama_base_url}/api/generate"
 
     try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(endpoint, json=payload)
+        async with httpx.AsyncClient(timeout=300.0) as client:
+            response = await client.post(
+                endpoint,
+                json=payload,
+            )
             response.raise_for_status()
     except httpx.HTTPError as exc:
         raise OllamaError(
@@ -38,7 +51,9 @@ async def generate_response(prompt: str) -> str:
     generated_text = data.get("response")
 
     if not generated_text:
-        raise OllamaError("Ollama n'a retourné aucune réponse exploitable.")
+        raise OllamaError(
+            "Ollama n'a retourné aucune réponse exploitable."
+        )
 
     return generated_text.strip()
 

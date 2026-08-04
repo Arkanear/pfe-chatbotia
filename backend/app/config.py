@@ -22,11 +22,12 @@ class Settings(BaseSettings):
     rag_top_k: int = 5
     rag_chunk_size: int = 1200
     rag_chunk_overlap: int = 200
+    rag_max_distance: float = 0.90
 
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="ignore",
+        extra="ignore",     
     )
 
 
