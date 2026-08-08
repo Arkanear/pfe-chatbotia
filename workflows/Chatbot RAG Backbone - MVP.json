@@ -1,0 +1,109 @@
+{
+  "name": "Chatbot RAG Backbone - MVP",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot-backbone",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "67f61ac1-57f0-4d23-9ba8-cb5292212861",
+      "name": "Webhook",
+      "webhookId": "e132a675-47c2-4da3-9073-72e968613cb8"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/rag/chat",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "question",
+              "value": "={{ $json.body.question }}"
+            },
+            {
+              "name": "top_k",
+              "value": "={{ $json.body.top_k || 5 }}"
+            },
+            {
+              "name": "category",
+              "value": "={{ $json.body.category || null }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "ed383dab-ace2-4998-bf0a-3c77271f29e9",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  \"answer\": $json.answer,\n  \"sources\": $json.sources,\n  \"model_source\": $json.model_source,\n  \"retrieval_source\": $json.retrieval_source\n} }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "4e51cb44-555d-4817-b842-6c73473d2779",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9ec16d7f-9ede-414d-ab09-c99ac09a7916",
+  "meta": {
+    "instanceId": "6fafbfcf84b799e72349b2f696688bbdffc811f617e6fa2aeb1d52277a28ab6a"
+  },
+  "nodeGroups": [],
+  "id": "0InYAv1zjLAszcs3",
+  "tags": []
+}
