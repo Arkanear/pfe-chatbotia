@@ -6,3 +6,5 @@ pydantic-settings
 chromadb
 pypdf
 python-docx
+streamlit
+requests

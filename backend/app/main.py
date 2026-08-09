@@ -75,6 +75,7 @@ class RagSourceResponse(BaseModel):
     subcategory: str
     chunk_index: int
     distance: float
+    content: str
 
 
 class RagChatResponse(BaseModel):
@@ -85,6 +86,7 @@ class RagChatResponse(BaseModel):
     model_source: str = "ollama"
     retrieval_source: str = "chromadb"
     detected_category: str | None = None
+    
 
 
 class SearchRequest(BaseModel):
@@ -182,6 +184,7 @@ async def rag_chat(
                 subcategory=source.subcategory,
                 chunk_index=source.chunk_index,
                 distance=source.distance,
+                content=source.content,
             )
             for source in result.sources
         ],

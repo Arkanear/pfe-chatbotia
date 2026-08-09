@@ -21,6 +21,7 @@ class RagSource:
     subcategory: str
     chunk_index: int
     distance: float
+    content: str
 
 
 @dataclass
@@ -160,6 +161,7 @@ n'est pas disponible dans la documentation fournie.
             subcategory=result.subcategory,
             chunk_index=result.chunk_index,
             distance=result.distance,
+            content=result.content,
         )
         for result in relevant_results
     ]
