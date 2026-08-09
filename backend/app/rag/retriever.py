@@ -7,7 +7,52 @@ import chromadb
 
 from app.config import get_settings
 from app.rag.embeddings import create_embeddings
+from collections import Counter
 
+async def detect_category(
+    question: str,
+    candidate_count: int = 8,
+) -> str | None:
+    """
+    Détecte automatiquement la catégorie documentaire
+    la plus pertinente pour une question.
+    """
+
+    results = await search_documents(
+        question=question,
+        top_k=candidate_count,
+        category=None,
+    )
+
+    if not results:
+        return None
+
+    # On ne conserve que les résultats suffisamment pertinents
+    settings = get_settings()
+
+    relevant_results = [
+        result
+        for result in results
+        if result.distance <= settings.rag_max_distance
+    ]
+
+    if not relevant_results:
+        return None
+
+    categories = [
+        result.category
+        for result in relevant_results
+        if result.category
+    ]
+
+    if not categories:
+        return None
+
+    counts = Counter(categories)
+
+    most_common_category, _ = counts.most_common(1)[0]
+
+    return most_common_category
 
 @dataclass
 class SearchResult:

@@ -84,6 +84,7 @@ class RagChatResponse(BaseModel):
     sources: list[RagSourceResponse]
     model_source: str = "ollama"
     retrieval_source: str = "chromadb"
+    detected_category: str | None = None
 
 
 class SearchRequest(BaseModel):
@@ -164,12 +165,11 @@ async def rag_chat(
             detail=str(exc),
         ) from exc
     except Exception as exc:
+        print(f"ERREUR RAG : {type(exc).__name__}: {exc}")
+
         raise HTTPException(
             status_code=500,
-            detail=(
-                "Une erreur est survenue pendant "
-                "la génération de la réponse documentaire."
-            ),
+            detail=f"{type(exc).__name__}: {str(exc)}",
         ) from exc
 
     return RagChatResponse(
@@ -185,6 +185,7 @@ async def rag_chat(
             )
             for source in result.sources
         ],
+        detected_category=result.category,
     )
 
 @app.post(
@@ -208,12 +209,11 @@ async def search(
             detail=str(exc),
         ) from exc
     except Exception as exc:
+        print(f"ERREUR RAG : {type(exc).__name__}: {exc}")
+
         raise HTTPException(
             status_code=500,
-            detail=(
-                "Une erreur est survenue pendant "
-                "la recherche documentaire."
-            ),
+            detail=f"{type(exc).__name__}: {str(exc)}",
         ) from exc
 
     return [

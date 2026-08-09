@@ -4,7 +4,11 @@ from dataclasses import dataclass
 
 from app.config import get_settings
 from app.llm.ollama_client import generate_response
-from app.rag.retriever import SearchResult, search_documents
+from app.rag.retriever import (
+    SearchResult,
+    detect_category,
+    search_documents,
+)
 
 
 @dataclass
@@ -22,9 +26,9 @@ class RagSource:
 @dataclass
 class RagAnswer:
     """Réponse du chatbot accompagnée de ses sources."""
-
     answer: str
     sources: list[RagSource]
+    category: str | None
 
 
 def build_document_context(results: list[SearchResult]) -> str:
@@ -61,16 +65,24 @@ async def answer_with_rag(
 
     cleaned_question = question.strip()
 
-    if not cleaned_question:
-        raise ValueError("La question ne peut pas être vide.")
+    detected_category = category
 
-    settings = get_settings()
+    if not detected_category:
+        detected_category = await detect_category(
+            question=cleaned_question
+            )
 
     results = await search_documents(
         question=cleaned_question,
         top_k=top_k,
-        category=category,
+        category=detected_category,
     )
+
+    if not cleaned_question:
+        raise ValueError("La question ne peut pas être vide.")
+
+    settings = get_settings()
+     
 
     if not results:
         return RagAnswer(
@@ -79,6 +91,7 @@ async def answer_with_rag(
                 "de répondre à cette question."
             ),
             sources=[],
+            category=detected_category,
         )
 
     relevant_results = [
@@ -95,6 +108,7 @@ async def answer_with_rag(
                 "de manière fiable à cette question."
             ),
             sources=[],
+            category=detected_category,
         )
 
     context = build_document_context(relevant_results)
@@ -153,4 +167,5 @@ n'est pas disponible dans la documentation fournie.
     return RagAnswer(
         answer=generated_answer,
         sources=sources,
+        category=detected_category,
     )

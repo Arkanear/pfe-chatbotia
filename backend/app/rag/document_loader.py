@@ -9,7 +9,7 @@ from pypdf import PdfReader
 
 SUPPORTED_EXTENSIONS = {".txt", ".docx", ".pdf"}
 
-IGNORED_DIRECTORY_NAMES = {
+IGNORED_KEYWORDS = {
     "archive",
     "archives",
     "ancien",
@@ -34,7 +34,12 @@ class LoadedDocument:
 def read_txt(path: Path) -> str:
     """Lit un fichier texte en essayant plusieurs encodages."""
 
-    encodings = ("utf-8-sig", "utf-8", "cp1252", "latin-1")
+    encodings = (
+        "utf-8-sig",
+        "utf-8",
+        "cp1252",
+        "latin-1",
+    )
 
     for encoding in encodings:
         try:
@@ -42,20 +47,27 @@ def read_txt(path: Path) -> str:
         except UnicodeDecodeError:
             continue
 
-    return path.read_text(encoding="utf-8", errors="replace")
+    return path.read_text(
+        encoding="utf-8",
+        errors="replace",
+    )
 
 
 def read_docx(path: Path) -> str:
     """Extrait les paragraphes et tableaux d'un fichier DOCX."""
 
     document = Document(path)
+
     parts: list[str] = []
 
+    # Paragraphes
     for paragraph in document.paragraphs:
         text = paragraph.text.strip()
+
         if text:
             parts.append(text)
 
+    # Tableaux
     for table in document.tables:
         for row in table.rows:
             values = [
@@ -74,43 +86,83 @@ def read_pdf(path: Path) -> str:
     """Extrait le texte d'un PDF page par page."""
 
     reader = PdfReader(path)
+
     pages: list[str] = []
 
-    for page_number, page in enumerate(reader.pages, start=1):
+    for page_number, page in enumerate(
+        reader.pages,
+        start=1,
+    ):
         text = page.extract_text()
 
         if text and text.strip():
             pages.append(
-                f"[Page {page_number}]\n{text.strip()}"
+                f"[Page {page_number}]\n"
+                f"{text.strip()}"
             )
 
     return "\n\n".join(pages)
 
 
-def should_ignore_path(path: Path, documents_root: Path) -> bool:
-    """Détermine si un fichier appartient à un dossier à exclure."""
+def should_ignore_path(
+    path: Path,
+    documents_root: Path,
+) -> bool:
+    """
+    Détermine si un fichier appartient à un dossier
+    qui ne doit pas être indexé.
+    """
 
-    relative_parts = path.relative_to(documents_root).parts[:-1]
+    relative_parts = path.relative_to(
+        documents_root
+    ).parts[:-1]
 
-    normalized_parts = {
-        part.strip().lower()
-        for part in relative_parts
-    }
+    for part in relative_parts:
+        normalized = part.strip().lower()
 
-    return bool(normalized_parts & IGNORED_DIRECTORY_NAMES)
+        if any(
+            keyword in normalized
+            for keyword in IGNORED_KEYWORDS
+        ):
+            return True
+
+    return False
 
 
 def extract_classification(
     path: Path,
     documents_root: Path,
 ) -> tuple[str, str]:
-    """Déduit la catégorie et la sous-catégorie depuis le chemin."""
+    """
+    Déduit automatiquement la catégorie et la
+    sous-catégorie depuis l'arborescence.
+    """
 
-    relative_path = path.relative_to(documents_root)
+    relative_path = path.relative_to(
+        documents_root
+    )
+
     parts = relative_path.parts
 
-    category = parts[0] if len(parts) >= 2 else "Non classé"
-    subcategory = parts[1] if len(parts) >= 3 else "Racine"
+    # Exemple :
+    #
+    # documents/
+    # └── FTTH/
+    #     └── CGNAT/
+    #         └── fichier.pdf
+    #
+    # category = FTTH
+    # subcategory = CGNAT
+
+    if len(parts) >= 2:
+        category = parts[0]
+    else:
+        category = "Non classé"
+
+    if len(parts) >= 3:
+        subcategory = parts[1]
+    else:
+        subcategory = "Racine"
 
     return category, subcategory
 
@@ -119,18 +171,26 @@ def load_document(
     path: Path,
     documents_root: Path,
 ) -> LoadedDocument:
-    """Charge un document compatible avec ses métadonnées."""
+    """
+    Charge le texte d'un document compatible et
+    lui associe ses métadonnées.
+    """
 
     extension = path.suffix.lower()
 
     if extension == ".txt":
         text = read_txt(path)
+
     elif extension == ".docx":
         text = read_docx(path)
+
     elif extension == ".pdf":
         text = read_pdf(path)
+
     else:
-        raise ValueError(f"Format non pris en charge : {extension}")
+        raise ValueError(
+            f"Format non pris en charge : {extension}"
+        )
 
     category, subcategory = extract_classification(
         path=path,
@@ -146,22 +206,39 @@ def load_document(
     )
 
 
-def find_documents(documents_root: Path) -> list[Path]:
-    """Recherche les documents compatibles sans parcourir les archives."""
+def find_documents(
+    documents_root: Path,
+) -> list[Path]:
+    """
+    Recherche récursivement tous les documents
+    compatibles à indexer.
+    """
 
     documents: list[Path] = []
 
     for path in documents_root.rglob("*"):
+
+        # Ignorer les dossiers
         if not path.is_file():
             continue
 
+        # Ignorer les fichiers temporaires Word
+        # Exemple : ~$procedure.docx
         if path.name.startswith("~$"):
             continue
 
-        if path.suffix.lower() not in SUPPORTED_EXTENSIONS:
+        # Format non encore pris en charge
+        if (
+            path.suffix.lower()
+            not in SUPPORTED_EXTENSIONS
+        ):
             continue
 
-        if should_ignore_path(path, documents_root):
+        # Archives, anciens documents, backups...
+        if should_ignore_path(
+            path=path,
+            documents_root=documents_root,
+        ):
             continue
 
         documents.append(path)
