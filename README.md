@@ -1,4 +1,4 @@
-# Chatbot IA Backbone
+# PFE Chatbot IA Backbone
 
 Assistant conversationnel basé sur une architecture **RAG (Retrieval-Augmented Generation)** permettant d'interroger en langage naturel une base documentaire technique.
 
